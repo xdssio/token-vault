@@ -3,15 +3,24 @@ import os
 import pyperclip
 import typer
 from typing import Optional
+from importlib.metadata import version, PackageNotFoundError
 import tokenvault
 from tokenvault.config import CONSTANTS
 
 app = typer.Typer()
 
+PASSWORD_ERROR_MSG = (
+    "Password is incorrect: please provide the correct password, "
+    "set `TOKENVAULT_PASSWORD` or do not send a password if the vault is not encrypted"
+)
+
 
 def version_callback(value: bool):
     if value:
-        typer.echo("1.0.0")
+        try:
+            typer.echo(version("tokenvault"))
+        except PackageNotFoundError:
+            typer.echo("unknown")
         raise typer.Exit()
 
 
@@ -58,9 +67,7 @@ def init(
         )
         typer.echo(f"Vault created at {path} {encrypt_message}")
     except ValueError:
-        typer.echo(
-            "Password is incorrect: please provide the correct password, set `TOKENVAULT_PASSWORD` or do not send a password if the vault is not encrypted"
-        )
+        typer.echo(PASSWORD_ERROR_MSG)
 
 
 @app.command()
@@ -93,9 +100,7 @@ def add(
         if echo_token:
             typer.echo(f"token: {token}")
     except ValueError:
-        typer.echo(
-            "Password is incorrect: please provide the correct password, set `TOKENVAULT_PASSWORD` or do not send a password if the vault is not encrypted"
-        )
+        typer.echo(PASSWORD_ERROR_MSG)
     except json.JSONDecodeError:
         typer.echo("Metadata must be a valid json dict")
 
@@ -120,9 +125,7 @@ def remove(
         else:
             typer.echo(f"Key '{key}' not found in vault")
     except ValueError:
-        typer.echo(
-            "Password is incorrect: please provide the correct password, set `TOKENVAULT_PASSWORD` or do not send a password if the vault is not encrypted"
-        )
+        typer.echo(PASSWORD_ERROR_MSG)
 
 
 @app.command()
@@ -142,11 +145,9 @@ def validate(
         if metadata is None:
             typer.echo("Token is not valid")
         else:
-            typer.echo(metadata)
+            typer.echo(json.dumps(metadata, indent=2))
     except ValueError:
-        typer.echo(
-            "Password is incorrect: please provide the correct password, set `TOKENVAULT_PASSWORD` or do not send a password if the vault is not encrypted"
-        )
+        typer.echo(PASSWORD_ERROR_MSG)
 
 
 @app.command()
@@ -165,17 +166,20 @@ def list(
         for key in vault.pool.keys():
             typer.echo(key)
     except ValueError:
-        typer.echo(
-            "Password is incorrect: please provide the correct password, set `TOKENVAULT_PASSWORD` or do not send a password if the vault is not encrypted"
-        )
+        typer.echo(PASSWORD_ERROR_MSG)
 
 
 @app.command()
 def encrypted(path: str = typer.Argument("vault.db", help="Path to the vault file")):
     """Check if the vault is encrypted"""
     try:
+        saved_password = os.environ.get(CONSTANTS.TOKENVAULT_PASSWORD)
         os.environ.pop(CONSTANTS.TOKENVAULT_PASSWORD, None)
-        tokenvault.TokenVault(path, password=None)
-        typer.echo("Vault is not encrypted")
+        try:
+            tokenvault.TokenVault(path, password=None)
+            typer.echo("Vault is not encrypted")
+        finally:
+            if saved_password:
+                os.environ[CONSTANTS.TOKENVAULT_PASSWORD] = saved_password
     except ValueError:
         typer.echo("Vault is encrypted")
