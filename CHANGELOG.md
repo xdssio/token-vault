@@ -7,13 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2025-10-01
+
 ### Added
+- FastAPI integration example in `examples/` directory
+- SECURITY.md with security policy and best practices
 - Comprehensive type hints for all public APIs
 - GitHub Actions CI workflow for automated testing and linting
 - Support for Python 3.8-3.12
 
 ### Changed
 - Improved test coverage with proper assertions
+- Bumped to v0.1.0 to indicate API stability
 
 ### Removed
 - Unused `cloudpickle` dependency
@@ -41,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Basic token generation and validation
 - Encryption/decryption utilities
 
-[Unreleased]: https://github.com/xdssio/token-vault/compare/v0.0.2...HEAD
+[Unreleased]: https://github.com/xdssio/token-vault/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/xdssio/token-vault/releases/tag/v0.1.0
 [0.0.2]: https://github.com/xdssio/token-vault/releases/tag/v0.0.2
 [0.0.1]: https://github.com/xdssio/token-vault/releases/tag/v0.0.1 

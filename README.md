@@ -132,7 +132,7 @@ $ tv add user@example.com vault.db
 
 ## FastAPI Integration
 
-Secure your FastAPI endpoints with TokenVault:
+Secure your FastAPI endpoints with TokenVault. See the [examples/](examples/) directory for a complete working demo.
 
 ```python
 from fastapi import FastAPI, Depends, HTTPException, status
@@ -179,6 +179,10 @@ $ curl -H "Authorization: Bearer <token>" http://localhost:8000/protected
 $ curl http://localhost:8000/public
 {"message": "This is a public endpoint"}
 ```
+
+## Security
+
+For security best practices, vulnerability reporting, and known limitations, see [SECURITY.md](SECURITY.md).
 
 ## Use with Care ⚠️
 

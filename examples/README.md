@@ -5,16 +5,12 @@ A FastAPI test application to demonstrate TokenVault authentication.
 ## Quick Start
 
 1. **Start the server:**
-   ```bash
-   # Option 1: Use the run script
-   python run_test_app.py
-   
-   # Option 2: Direct uvicorn
-   uvicorn tests.app:app --reload
+   ```bash   
+   uvicorn examples.fastapi_example:app --reload
    ```
 
 2. **Visit the API docs:**
-   - Open: http://localhost:8000/docs
+   - Open: http://localhost:8001/docs
    - Interactive Swagger UI for testing endpoints
 
 ## Available Endpoints
