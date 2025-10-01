@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tokenvault"
+version = "0.0.2"
+license = { file = "LICENSE" }
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+]
+dependencies = ["pyjwt", "cryptography", "cloudpickle", "click", "pyperclip"]
+keywords = ["cryptography", "vault", "user management", "cloudpickle", "cli", "jwt", "token", "encryption", "asymmetric", "encryption"]
+requires-python = ">=3.7"
+description = "A lightweight package to manage tokens in your application in a single encrypted file and asymmetric token encryption."
+readme = "README.md"
+
+[project.optional-dependencies]
+dev = ["pytest", "sphinx", "sphinx-rtd-theme", "sphinx-autodoc-typehints", "sphinxcontrib-napoleon", "sphinxcontrib-apidoc", "pytest","fastapi","uvicorn"]
+
+[project.scripts]
+tv = "tokenvault.cli:main"
+
+
+[tool.setuptools]
+packages = ["tokenvault"]
+
+[project.urls]
+Homepage = "https://xethub.com/xdssio/token-vault"
+
+
