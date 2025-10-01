@@ -7,6 +7,7 @@
 [![PyPI version](https://badge.fury.io/py/tokenvault.svg)](https://badge.fury.io/py/tokenvault)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![CI](https://github.com/xdssio/token-vault/actions/workflows/ci.yml/badge.svg)](https://github.com/xdssio/token-vault/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/xdssio/token-vault/branch/main/graph/badge.svg)](https://codecov.io/gh/xdssio/token-vault)
 
 TokenVault is a lightweight package for secure user management using encrypted tokens stored in a single file with asymmetric encryption.
 
