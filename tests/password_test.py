@@ -11,7 +11,7 @@ def test_vault_persistence():
     alon_token = vault.add('user@gmail.com', metadata)
     file = NamedTemporaryFile()
     vault.save(file.name)
-    TokenVault(file.name).validate(alon_token) == metadata
+    assert TokenVault(file.name).validate(alon_token) == metadata
 
 
 def test_vault_persistence_password():
