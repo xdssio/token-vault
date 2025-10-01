@@ -170,3 +170,19 @@ $ curl -H "Authorization: Bearer <token>" http://localhost:8000/protected
 $ curl http://localhost:8000/public
 {"message": "This is a public endpoint"}
 ```
+
+## Use with Care ⚠️
+
+TokenVault is a **pet project**, built to simplify small-scale, secure user management.  
+While it provides encryption and safe defaults, it is **not a replacement** for enterprise-grade identity management solutions (e.g., Cognito, Auth0, Keycloak).  
+
+Use it with care in:  
+- Personal projects  
+- Internal tools  
+- Prototypes & proofs-of-concept  
+- Small teams that benefit from Git-based user/version control  
+
+Avoid using it for:  
+- Applications with large user bases  
+- Systems requiring strict compliance (HIPAA, GDPR, SOC2, etc.)  
+- High-security production environments where professional solutions are required  
