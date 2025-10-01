@@ -1,7 +1,7 @@
 """
 FastAPI test application for TokenVault authentication.
-Run with: uvicorn tests.app:app --reload
-Then visit: http://localhost:8000/docs
+Run with: uvicorn examples.fastapi_example:app --reload
+Then visit: http://localhost:8001/docs
 """
 
 import os
@@ -36,24 +36,6 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         )
     
     return user_data
-
-@app.get("/")
-async def root():
-    """API information"""
-    return {
-        "message": "TokenVault API",
-        "docs": "/docs",
-        "endpoints": {
-            "add": "POST /add - Add user and get token",
-            "public": "GET /public - Public endpoint (no auth required)",
-            "protected": "GET /protected - Protected endpoint (requires token)"
-        },
-        "curl_examples": {
-            "add_user": 'curl -X POST "http://localhost:8001/add" -H "Content-Type: application/json" -d \'{"email": "user@example.com"}\'',
-            "public": 'curl http://localhost:8001/public',
-            "protected": 'curl -H "Authorization: Bearer <token>" http://localhost:8001/protected'
-        }
-    }
 
 @app.post("/add")
 async def add_user(email: str):
