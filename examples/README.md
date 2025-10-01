@@ -6,7 +6,7 @@ A FastAPI test application to demonstrate TokenVault authentication.
 
 1. **Start the server:**
    ```bash   
-   uvicorn examples.fastapi_example:app --reload
+   uvicorn examples.fastapi_example:app --port=8001 --reload
    ```
 
 2. **Visit the API docs:**
