@@ -11,8 +11,8 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
 ]
-dependencies = ["pyjwt", "cryptography", "cloudpickle", "typer", "pyperclip"]
-keywords = ["cryptography", "vault", "user management", "cloudpickle", "cli", "jwt", "token", "encryption", "asymmetric", "fastapi"]
+dependencies = ["pyjwt", "cryptography", "typer", "pyperclip"]
+keywords = ["cryptography", "vault", "user management", "cli", "jwt", "token", "encryption", "asymmetric", "fastapi"]
 requires-python = ">=3.7"
 description = "A lightweight package to manage tokens in your application in a single encrypted file and asymmetric token encryption."
 readme = "README.md"
