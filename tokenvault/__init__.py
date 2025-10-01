@@ -1,16 +1,19 @@
 import os
-import contextlib
 import pathlib
+import json
+import base64
 from collections import defaultdict
 
 import cryptography.fernet
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
-import cloudpickle
 import jwt
 import uuid
 from tokenvault.config import CONSTANTS
+import importlib.metadata
+
+__version__ = importlib.metadata.version("tokenvault")
 
 
 class TokenVault:
@@ -25,21 +28,36 @@ class TokenVault:
 
     @classmethod
     def load_pool(cls, path, password: str = None):
-        pool = pathlib.Path(path).read_bytes()
+        """Load and decrypt a vault from disk."""
+        vault_path = pathlib.Path(path)
+        if not vault_path.exists():
+            raise FileNotFoundError(f"Vault file not found: {path}")
+        data = vault_path.read_bytes()
         password = password or os.getenv(CONSTANTS.TOKENVAULT_PASSWORD)
         if password:
             try:
-                pool = cls.decrypt(pool, password)
+                data = cls.decrypt(data, password)
             except cryptography.fernet.InvalidToken:
                 raise ValueError("Provided password is invalid")
-        del password
-        with contextlib.suppress(cloudpickle.pickle.UnpicklingError):
-            return cloudpickle.loads(pool)
-        raise ValueError("File is encrypted: please provide password or set `TOKENVAULT_PASSWORD`")
+        try:
+            pool_json = json.loads(data)
+            pool = defaultdict(dict)
+            for key, value in pool_json.items():
+                pool[key] = base64.b64decode(value)
+            return pool
+        except (json.JSONDecodeError, ValueError):
+            raise ValueError(
+                "File is encrypted: please provide password or set `TOKENVAULT_PASSWORD`"
+            )
 
     def save(self, path: str, password: str = None):
+        """Encrypt and save the vault to disk."""
         password = password or os.getenv(CONSTANTS.TOKENVAULT_PASSWORD)
-        data = cloudpickle.dumps(self.pool)
+        pool_json = {
+            key: base64.b64encode(value).decode("ascii")
+            for key, value in self.pool.items()
+        }
+        data = json.dumps(pool_json).encode("utf-8")
         if password:
             data = self.encrypt(data, password)
         pathlib.Path(path).write_bytes(data)
@@ -47,23 +65,28 @@ class TokenVault:
 
     @classmethod
     def generate_key(cls):
+        """Generate a random encryption key."""
         return Fernet.generate_key()
 
     @classmethod
     def encrypt(cls, data: bytes, key: bytes = None):
+        """Encrypt data using Fernet symmetric encryption."""
         return Fernet(key).encrypt(data)
 
     @classmethod
     def decrypt(cls, data: bytes, key: bytes):
+        """Decrypt data using Fernet symmetric encryption."""
         return Fernet(key).decrypt(data)
 
     def add(self, key, metadata: dict = None):
         """
         Generate a token which can validate the key.
         :param key: This key could be verified using the generated token.
-        :param metadata: and metadata you want provided at validation time
+        :param metadata: any metadata you want provided at validation time
         :return: A Token which validates the key
         """
+        if not key:
+            raise ValueError("key cannot be empty")
         metadata = metadata.copy() if metadata else {}
         if not isinstance(metadata, dict):
             raise ValueError("metadata must be of type dict")
@@ -81,6 +104,7 @@ class TokenVault:
         return jwt.encode(metadata, private_key, algorithm=TokenVault.ALGORITHM) + f"{TokenVault.DELIMITER}{key}"
 
     def remove(self, key):
+        """Remove a key from the vault. Returns True if key existed, False otherwise."""
         return self.pool.pop(key, None) is not None
 
     def validate(self, token: str):
@@ -89,8 +113,8 @@ class TokenVault:
         :param token: The token to validate
         :return: None if the token is invalid, otherwise a dict with the metadata
         """
-        split = token.split(TokenVault.DELIMITER)
-        if len(split) < 2 or split[1] not in self.pool:
+        split = token.split(TokenVault.DELIMITER, 1)
+        if len(split) != 2 or split[1] not in self.pool:
             return None
         try:
             meta = jwt.decode(split[0], self.pool.get(split[1]), algorithms=[TokenVault.ALGORITHM])
