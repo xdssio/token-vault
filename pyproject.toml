@@ -11,8 +11,8 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
 ]
-dependencies = ["pyjwt", "cryptography", "cloudpickle", "click", "pyperclip"]
-keywords = ["cryptography", "vault", "user management", "cloudpickle", "cli", "jwt", "token", "encryption", "asymmetric", "encryption"]
+dependencies = ["pyjwt", "cryptography", "cloudpickle", "typer", "pyperclip"]
+keywords = ["cryptography", "vault", "user management", "cloudpickle", "cli", "jwt", "token", "encryption", "asymmetric", "fastapi"]
 requires-python = ">=3.7"
 description = "A lightweight package to manage tokens in your application in a single encrypted file and asymmetric token encryption."
 readme = "README.md"
@@ -21,7 +21,7 @@ readme = "README.md"
 dev = ["pytest", "sphinx", "sphinx-rtd-theme", "sphinx-autodoc-typehints", "sphinxcontrib-napoleon", "sphinxcontrib-apidoc", "pytest","fastapi","uvicorn"]
 
 [project.scripts]
-tv = "tokenvault.cli:main"
+tv = "tokenvault.cli:app"
 
 
 [tool.setuptools]

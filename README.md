@@ -92,8 +92,9 @@ TokenVault("vault.db").validate(token)
 Manage users via command line:
 
 ```bash
-# Initialize vault
-$ tv init vault.db --no-password
+# Initialize vault (unencrypted by default)
+$ tv init vault.db
+Vault created at vault.db and not encrypted
 
 # Add user (token copied to clipboard)
 $ tv add user@example.com vault.db --metadata='{"role": "admin", "name": "John Doe"}'
@@ -103,21 +104,25 @@ $ tv list vault.db
 user@example.com
 
 # Validate token
-$ tv validate <token>
+$ tv validate <token> vault.db
 {"role": "admin", "name": "John Doe"}
 
 # Remove user
 $ tv remove user@example.com vault.db
 
-# Create vault with passowrd
-$ tv init vault.db --echo-password
-password: G99********
+# Create vault with generated password
+$ tv init vault.db --generate-password
+Generated password (copied to clipboard): G99********
 Vault created at vault.db and encrypted with password
 
-# Set environment variable
+# Or use a specific password
+$ tv init vault.db --password "your-secret-password"
+Vault created at vault.db and encrypted with password
+
+# Set environment variable for subsequent commands
 $ export TOKENVAULT_PASSWORD=G99********
 
-# Add user
+# Add user (password picked up from environment)
 $ tv add user@example.com vault.db
 ```
 

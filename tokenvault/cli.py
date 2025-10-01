@@ -1,135 +1,181 @@
 import json
 import os
 import pyperclip
-import click
+import typer
+from typing import Optional
 import tokenvault
 from tokenvault.config import CONSTANTS
-from functools import update_wrapper
+
+app = typer.Typer()
 
 
-def handle_errors(f):
-    @click.pass_context
-    def wrapper(ctx, *args, **kwargs):
-        try:
-            return ctx.invoke(f, *args, **kwargs)
-        except ValueError as e:
-            click.echo(
-                f"Password is incorrect: please provide the correct password, set `TOKENVAULT_PASSWORD` or do not send a password if the vault is not encrypted"
-            )
-            return None
-        except json.JSONDecodeError:
-            click.echo(f"Metadata must be a valid json dict")
-            return None
-
-    return update_wrapper(wrapper, f)
+def version_callback(value: bool):
+    if value:
+        typer.echo("1.0.0")
+        raise typer.Exit()
 
 
-@click.group()
-@click.version_option("1.0.0")
-def main():
+@app.callback()
+def main(
+    version: Optional[bool] = typer.Option(
+        None,
+        "--version",
+        callback=version_callback,
+        is_eager=True,
+        help="Show version and exit",
+    ),
+):
     pass
 
 
-@main.command()
-@click.argument("path", type=click.Path(exists=False), default="vault.db")
-@click.option(
-    "-p",
-    "--password",
-    type=str,
-    help=f"If not provided and TOKENVAULT_PASSWORD is not set in environment, will generate a password.",
-)
-@click.option('--no-password', is_flag=True, default=False, help=f"If True, generate a vault without encryption.")
-@click.option("--echo-password", is_flag=True, default=False,
-              help=f"If True, echo the password to the console if generated.")
-@handle_errors
-def init(path: str = "vault.db", password: str = None, no_password: bool = False, echo_password: bool = False):
-    """Initialize a vault file in 'path' argument. Default is 'vault.db'"""
-    if not no_password:
-        password = password or os.getenv(CONSTANTS.TOKENVAULT_PASSWORD)
-        if not password:
+@app.command()
+def init(
+    path: str = typer.Argument("vault.db", help="Path to the vault file"),
+    password: Optional[str] = typer.Option(
+        None,
+        "-p",
+        "--password",
+        help="Encrypt vault with this specific password.",
+    ),
+    generate_password: bool = typer.Option(
+        False,
+        "--generate-password",
+        help="Generate a random password and encrypt the vault.",
+    ),
+):
+    """Initialize a vault file in 'path' argument. Default is 'vault.db' with no encryption"""
+    try:
+        if generate_password and not password:
             password = tokenvault.TokenVault.generate_key().decode()
             pyperclip.copy(password)
-        if echo_password:
-            click.echo(f"password: {password}")
-    tokenvault.TokenVault().save(path, password=password)
-    encrypt_message = "and encrypted with password" if password else "and not encrypted"
-    click.echo(f"Vault created at {path} {encrypt_message}")
+            typer.echo(f"Generated password (copied to clipboard): {password}")
+        elif not password:
+            password = os.getenv(CONSTANTS.TOKENVAULT_PASSWORD)
+
+        tokenvault.TokenVault().save(path, password=password)
+        encrypt_message = (
+            "and encrypted with password" if password else "and not encrypted"
+        )
+        typer.echo(f"Vault created at {path} {encrypt_message}")
+    except ValueError:
+        typer.echo(
+            "Password is incorrect: please provide the correct password, set `TOKENVAULT_PASSWORD` or do not send a password if the vault is not encrypted"
+        )
 
 
-@main.command()
-@click.argument("key", type=str)
-@click.argument("path", type=click.Path(exists=True), default="vault.db")
-@click.option("-p", "--password", type=str, default=None,
-              help=f"If not provided and TOKENVAULT_PASSWORD is not set in environment, assume no password.")
-@click.option("-m", "--metadata", type=str, help=f"Metadata for the key as json dict")
-@click.option("--echo-token", is_flag=True, default=False,
-              help=f"If True, echo the token to the console if generated.")
-@handle_errors
-def add(key: str, path: str, password: str = None, metadata: str = None, echo_token: bool = False):
+@app.command()
+def add(
+    key: str = typer.Argument(..., help="Key to add to the vault"),
+    path: str = typer.Argument("vault.db", help="Path to the vault file"),
+    password: Optional[str] = typer.Option(
+        None,
+        "-p",
+        "--password",
+        help="If not provided and TOKENVAULT_PASSWORD is not set in environment, assume no password.",
+    ),
+    metadata: Optional[str] = typer.Option(
+        None, "-m", "--metadata", help="Metadata for the key as json dict"
+    ),
+    echo_token: bool = typer.Option(
+        False,
+        "--echo-token",
+        help="If True, echo the token to the console if generated.",
+    ),
+):
     """Add a new key to the vault and copy the token to the clipboard"""
-    if metadata:
-        metadata = json.loads(metadata)
-    vault = tokenvault.TokenVault(path, password=password)
-    token = vault.add(key, metadata=metadata)
-    vault.save(path, password=password)
-    pyperclip.copy(token)
-    if echo_token:
-        click.echo(f"token: {token}")
-
-
-@main.command()
-@click.argument("key", type=str)
-@click.argument("path", type=click.Path(exists=True), default="vault.db")
-@click.option("-p", "--password", type=str, default=None,
-              help=f"If not provided and TOKENVAULT_PASSWORD is not set in environment, assume no password.")
-@handle_errors
-def remove(key: str, path: str, password: str = None):
-    """Remove a key from the vault"""
-
-    vault = tokenvault.TokenVault(path, password=password)
-    if vault.remove(key):
+    try:
+        if metadata:
+            metadata = json.loads(metadata)
+        vault = tokenvault.TokenVault(path, password=password)
+        token = vault.add(key, metadata=metadata)
         vault.save(path, password=password)
-        click.echo(f"Removed key '{key}' from vault")
-    else:
-        click.echo(f"Key '{key}' not found in vault")
+        pyperclip.copy(token)
+        if echo_token:
+            typer.echo(f"token: {token}")
+    except ValueError:
+        typer.echo(
+            "Password is incorrect: please provide the correct password, set `TOKENVAULT_PASSWORD` or do not send a password if the vault is not encrypted"
+        )
+    except json.JSONDecodeError:
+        typer.echo("Metadata must be a valid json dict")
 
 
-@main.command()
-@click.argument("token", type=str)
-@click.argument("path", type=click.Path(exists=True), default="vault.db")
-@click.option("-p", "--password", type=str, default=None,
-              help=f"If not provided and TOKENVAULT_PASSWORD is not set in environment, assume no password.")
-@handle_errors
-def validate(token: str, path: str, password: str = None):
+@app.command()
+def remove(
+    key: str = typer.Argument(..., help="Key to remove from the vault"),
+    path: str = typer.Argument("vault.db", help="Path to the vault file"),
+    password: Optional[str] = typer.Option(
+        None,
+        "-p",
+        "--password",
+        help="If not provided and TOKENVAULT_PASSWORD is not set in environment, assume no password.",
+    ),
+):
+    """Remove a key from the vault"""
+    try:
+        vault = tokenvault.TokenVault(path, password=password)
+        if vault.remove(key):
+            vault.save(path, password=password)
+            typer.echo(f"Removed key '{key}' from vault")
+        else:
+            typer.echo(f"Key '{key}' not found in vault")
+    except ValueError:
+        typer.echo(
+            "Password is incorrect: please provide the correct password, set `TOKENVAULT_PASSWORD` or do not send a password if the vault is not encrypted"
+        )
+
+
+@app.command()
+def validate(
+    token: str = typer.Argument(..., help="Token to validate"),
+    path: str = typer.Argument("vault.db", help="Path to the vault file"),
+    password: Optional[str] = typer.Option(
+        None,
+        "-p",
+        "--password",
+        help="If not provided and TOKENVAULT_PASSWORD is not set in environment, assume no password.",
+    ),
+):
     """Validate a token and return its metadata"""
-    metadata = tokenvault.TokenVault(path, password=password).validate(token)
-    if metadata is None:
-        click.echo(f"Token is not valid")
-    else:
-        click.echo(metadata)
+    try:
+        metadata = tokenvault.TokenVault(path, password=password).validate(token)
+        if metadata is None:
+            typer.echo("Token is not valid")
+        else:
+            typer.echo(metadata)
+    except ValueError:
+        typer.echo(
+            "Password is incorrect: please provide the correct password, set `TOKENVAULT_PASSWORD` or do not send a password if the vault is not encrypted"
+        )
 
 
-@main.command()
-@click.argument("path", type=click.Path(exists=True), default="vault.db")
-@click.option("-p", "--password", type=str, default=None,
-              help=f"If not provided and TOKENVAULT_PASSWORD is not set in environment, assume no password.")
-@handle_errors
-def list(path: str, password: str = None):
+@app.command()
+def list(
+    path: str = typer.Argument("vault.db", help="Path to the vault file"),
+    password: Optional[str] = typer.Option(
+        None,
+        "-p",
+        "--password",
+        help="If not provided and TOKENVAULT_PASSWORD is not set in environment, assume no password.",
+    ),
+):
     """List existing keys in the vault"""
-    vault = tokenvault.TokenVault(path, password=password)
-    for key in vault.pool.keys():
-        click.echo(key)
+    try:
+        vault = tokenvault.TokenVault(path, password=password)
+        for key in vault.pool.keys():
+            typer.echo(key)
+    except ValueError:
+        typer.echo(
+            "Password is incorrect: please provide the correct password, set `TOKENVAULT_PASSWORD` or do not send a password if the vault is not encrypted"
+        )
 
 
-@main.command()
-@click.argument("path", type=click.Path(exists=True), default="vault.db")
-def encrypted(path: str = "vault.db"):
+@app.command()
+def encrypted(path: str = typer.Argument("vault.db", help="Path to the vault file")):
     """Check if the vault is encrypted"""
     try:
         os.environ.pop(CONSTANTS.TOKENVAULT_PASSWORD, None)
         tokenvault.TokenVault(path, password=None)
-        click.echo("Vault is not encrypted")
-    except ValueError as e:
-        click.echo("Vault is encrypted")
-
-
+        typer.echo("Vault is not encrypted")
+    except ValueError:
+        typer.echo("Vault is encrypted")
