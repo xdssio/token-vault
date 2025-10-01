@@ -3,6 +3,7 @@ import os
 from typer.testing import CliRunner
 from tokenvault.cli import app
 import tokenvault
+from importlib.metadata import version
 
 runner = CliRunner()
 
@@ -181,7 +182,7 @@ def test_password_protection():
 def test_version():
     result = runner.invoke(app, ["--version"])
     assert result.exit_code == 0
-    assert "1.0.0" in result.stdout
+    assert version("tokenvault") in result.stdout
 
 
 def test_help():
