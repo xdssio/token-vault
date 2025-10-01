@@ -533,3 +533,4 @@ cython_debug/
 /.idea
 vault.db
 /dist
+.venv/

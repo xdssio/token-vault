@@ -18,7 +18,7 @@ description = "A lightweight package to manage tokens in your application in a s
 readme = "README.md"
 
 [project.optional-dependencies]
-dev = ["pytest", "pytest-cov", "sphinx", "sphinx-rtd-theme", "sphinx-autodoc-typehints", "sphinxcontrib-napoleon", "sphinxcontrib-apidoc", "fastapi", "uvicorn"]
+dev = ["pytest", "pytest-cov", "fastapi", "uvicorn", "httpx"]
 
 [project.scripts]
 tv = "tokenvault.cli:app"
