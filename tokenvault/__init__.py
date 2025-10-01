@@ -68,8 +68,10 @@ class TokenVault:
         if not isinstance(metadata, dict):
             raise ValueError("metadata must be of type dict")
         metadata[CONSTANTS.VALID] = str(uuid.uuid4())
-        private_key = rsa.generate_private_key(public_exponent=CONSTANTS.RAS_PUBLIC_EXPONENT,
-                                               key_size=CONSTANTS.RSA_KEY_SIZE)
+        private_key = rsa.generate_private_key(
+            public_exponent=CONSTANTS.RSA_PUBLIC_EXPONENT,
+            key_size=CONSTANTS.RSA_KEY_SIZE,
+        )
         public_key = private_key.public_key()
         public_key_bytes = public_key.public_bytes(
             encoding=serialization.Encoding.PEM,
@@ -83,9 +85,9 @@ class TokenVault:
 
     def validate(self, token: str):
         """
-        :param key: The
-        :param token:
-        :return: None if the key or token are invalid, otherwise a dict with the metadata
+        Validate a token and return its metadata.
+        :param token: The token to validate
+        :return: None if the token is invalid, otherwise a dict with the metadata
         """
         split = token.split(TokenVault.DELIMITER)
         if len(split) < 2 or split[1] not in self.pool:

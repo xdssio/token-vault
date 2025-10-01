@@ -5,7 +5,6 @@ import click
 import tokenvault
 from tokenvault.config import CONSTANTS
 from functools import update_wrapper
-from functools import update_wrapper
 
 
 def handle_errors(f):
@@ -15,9 +14,12 @@ def handle_errors(f):
             return ctx.invoke(f, *args, **kwargs)
         except ValueError as e:
             click.echo(
-                f"Password is incorrect: please provide the correct password, set `TOKENVAULT_PASSWORD` or do not send a password if the vault is not encrypted")
+                f"Password is incorrect: please provide the correct password, set `TOKENVAULT_PASSWORD` or do not send a password if the vault is not encrypted"
+            )
+            return None
         except json.JSONDecodeError:
             click.echo(f"Metadata must be a valid json dict")
+            return None
 
     return update_wrapper(wrapper, f)
 
@@ -30,8 +32,12 @@ def main():
 
 @main.command()
 @click.argument("path", type=click.Path(exists=False), default="vault.db")
-@click.option('-p', "--password", type=str,
-              help=f"If not provided and TOKENVAULT_PASSWORD is not set in environment, will generate.")
+@click.option(
+    "-p",
+    "--password",
+    type=str,
+    help=f"If not provided and TOKENVAULT_PASSWORD is not set in environment, will generate a password.",
+)
 @click.option('--no-password', is_flag=True, default=False, help=f"If True, generate a vault without encryption.")
 @click.option("--echo-password", is_flag=True, default=False,
               help=f"If True, echo the password to the console if generated.")
@@ -78,7 +84,7 @@ def add(key: str, path: str, password: str = None, metadata: str = None, echo_to
               help=f"If not provided and TOKENVAULT_PASSWORD is not set in environment, assume no password.")
 @handle_errors
 def remove(key: str, path: str, password: str = None):
-    """Add a new key to the vault and copy the token to the clipboard"""
+    """Remove a key from the vault"""
 
     vault = tokenvault.TokenVault(path, password=password)
     if vault.remove(key):
@@ -95,7 +101,7 @@ def remove(key: str, path: str, password: str = None):
               help=f"If not provided and TOKENVAULT_PASSWORD is not set in environment, assume no password.")
 @handle_errors
 def validate(token: str, path: str, password: str = None):
-    """Add a new key to the vault and copy the token to the clipboard"""
+    """Validate a token and return its metadata"""
     metadata = tokenvault.TokenVault(path, password=password).validate(token)
     if metadata is None:
         click.echo(f"Token is not valid")
