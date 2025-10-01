@@ -4,7 +4,7 @@
 
 # TokenVault
 
-[![PyPI version](https://badge.fury.io/py/tokenvault.svg)](https://badge.fury.io/py/tokenvault)
+[![PyPI version](https://img.shields.io/pypi/v/tokenvault.svg)](https://pypi.org/project/tokenvault/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![CI](https://github.com/xdssio/token-vault/actions/workflows/ci.yml/badge.svg)](https://github.com/xdssio/token-vault/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/xdssio/token-vault/branch/main/graph/badge.svg)](https://codecov.io/gh/xdssio/token-vault)
