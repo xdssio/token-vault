@@ -9,9 +9,9 @@ from importlib.metadata import version
 runner = CliRunner()
 
 # Mark tests that use pyperclip as xfail only in CI environments
-is_ci = os.getenv("CI") or os.getenv("GITHUB_ACTIONS")
+is_ci = bool(os.getenv("CI") or os.getenv("GITHUB_ACTIONS"))
 xfail_in_ci = pytest.mark.xfail(
-    is_ci, reason="pyperclip fails in headless CI environments", strict=False
+    condition=is_ci, reason="pyperclip fails in headless CI environments", strict=False
 )
 
 
