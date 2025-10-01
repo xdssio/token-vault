@@ -3,6 +3,7 @@ import pathlib
 import json
 import base64
 from collections import defaultdict
+from typing import Optional, Dict, Any
 
 import cryptography.fernet
 from cryptography.fernet import Fernet
@@ -20,14 +21,14 @@ class TokenVault:
     ALGORITHM = "RS256"
     DELIMITER = '=='
 
-    def __init__(self, path: str = None, password: str = None):
+    def __init__(self, path: Optional[str] = None, password: Optional[str] = None):
         pool = defaultdict(dict)
         if path:
             pool = self.load_pool(path=path, password=password)
         self.pool = pool
 
     @classmethod
-    def load_pool(cls, path, password: str = None):
+    def load_pool(cls, path: str, password: Optional[str] = None) -> Dict[str, bytes]:
         """Load and decrypt a vault from disk."""
         vault_path = pathlib.Path(path)
         if not vault_path.exists():
@@ -50,7 +51,7 @@ class TokenVault:
                 "File is encrypted: please provide password or set `TOKENVAULT_PASSWORD`"
             )
 
-    def save(self, path: str, password: str = None):
+    def save(self, path: str, password: Optional[str] = None) -> str:
         """Encrypt and save the vault to disk."""
         password = password or os.getenv(CONSTANTS.TOKENVAULT_PASSWORD)
         pool_json = {
@@ -64,21 +65,21 @@ class TokenVault:
         return path
 
     @classmethod
-    def generate_key(cls):
+    def generate_key(cls) -> bytes:
         """Generate a random encryption key."""
         return Fernet.generate_key()
 
     @classmethod
-    def encrypt(cls, data: bytes, key: bytes = None):
+    def encrypt(cls, data: bytes, key: Optional[bytes] = None) -> bytes:
         """Encrypt data using Fernet symmetric encryption."""
         return Fernet(key).encrypt(data)
 
     @classmethod
-    def decrypt(cls, data: bytes, key: bytes):
+    def decrypt(cls, data: bytes, key: bytes) -> bytes:
         """Decrypt data using Fernet symmetric encryption."""
         return Fernet(key).decrypt(data)
 
-    def add(self, key, metadata: dict = None):
+    def add(self, key: str, metadata: Optional[Dict[str, Any]] = None) -> str:
         """
         Generate a token which can validate the key.
         :param key: This key could be verified using the generated token.
@@ -103,11 +104,11 @@ class TokenVault:
         self.pool[key] = public_key_bytes
         return jwt.encode(metadata, private_key, algorithm=TokenVault.ALGORITHM) + f"{TokenVault.DELIMITER}{key}"
 
-    def remove(self, key):
+    def remove(self, key: str) -> bool:
         """Remove a key from the vault. Returns True if key existed, False otherwise."""
         return self.pool.pop(key, None) is not None
 
-    def validate(self, token: str):
+    def validate(self, token: str) -> Optional[Dict[str, Any]]:
         """
         Validate a token and return its metadata.
         :param token: The token to validate
