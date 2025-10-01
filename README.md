@@ -1,5 +1,5 @@
 <p align="center">
-   <img src="docs/images/logo.png" alt="logo" width="400" />
+   <img src="https://raw.githubusercontent.com/xdssio/token-vault/main/docs/images/logo.png" alt="logo" width="400" />
 </p>
 
 # TokenVault
